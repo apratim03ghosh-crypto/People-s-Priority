@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MP Command Center — People's Priorities</title>
+  <meta name="description" content="MP Administration Dashboard — manage constituency priorities, track issue clusters, update statuses, and communicate with citizens.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ── Design Tokens ──────────────────────────────────────────── */
+    :root {
+      --ink:          #18212f;
+      --ink-soft:     #374151;
+      --muted:        #667085;
+      --line:         #e2e8f0;
+      --line-soft:    #f1f5f9;
+      --panel:        #ffffff;
+      --page:         #f0f4f8;
+      --brand:        #176b87;
+      --brand-light:  #e0f2fa;
+      --brand-strong: #0b4a5f;
+      --accent:       #d98c24;
+      --accent-light: #fff8eb;
+      --danger:       #b42318;
+      --danger-light: #fef2f2;
+      --good:         #237a57;
+      --good-light:   #ecfdf5;
+      --warn:         #92400e;
+      --warn-light:   #fef3c7;
+      --triage-quick: #0369a1;
+      --triage-urgent:#b91c1c;
+      --triage-long:  #6d28d9;
+      --triage-emergency: #dc2626;
+      --admin-accent: #1e3a5f;
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      color-scheme: light;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Base Elements ──────────────────────────────────────────── */
+    button, input, textarea, select { font: inherit; }
+
+    button {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      min-height: 40px;
+      padding: 0 16px;
+      cursor: pointer;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.875rem;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    button:hover:not(:disabled) {
+      background: var(--brand-strong);
+      box-shadow: 0 2px 8px rgba(11, 74, 95, 0.25);
+    }
+
+    button:active:not(:disabled) { transform: scale(0.98); }
+
+    button.secondary {
+      background: var(--panel);
+      border-color: var(--line);
+      color: var(--ink-soft);
+    }
+
+    button.secondary:hover:not(:disabled) {
+      background: var(--line-soft);
+      border-color: #cbd5e1;
+      box-shadow: none;
+    }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 10px 13px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      outline: none;
+      font-size: 0.9rem;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(23, 107, 135, 0.12);
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Topbar ─────────────────────────────────────────────────── */
+    .topbar {
+      min-height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      background: var(--admin-accent);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-logo {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .topbar-title strong {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      display: block;
+    }
+
+    .topbar-title span {
+      color: rgba(255,255,255,0.65);
+      font-size: 0.78rem;
+    }
+
+    .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+    .admin-badge {
+      background: rgba(255,255,255,0.15);
+      color: rgba(255,255,255,0.9);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 2px 12px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .admin-page {
+      display: grid;
+      gap: 0;
+    }
+
+    .auth-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 60px);
+      padding: 24px;
+    }
+
+    .auth-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      padding: 36px;
+      width: 100%;
+      max-width: 420px;
+      display: grid;
+      gap: 20px;
+    }
+
+    .auth-card-header { text-align: center; display: grid; gap: 8px; }
+    .auth-card-header h1 { margin: 0; font-size: 1.5rem; font-weight: 900; color: var(--admin-accent); }
+    .auth-card-header p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+    .auth-card-icon { font-size: 2.5rem; display: block; margin-bottom: 4px; }
+
+    .login-form { display: grid; gap: 14px; }
+    .login-submit { width: 100%; justify-content: center; }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(300px, 620px) minmax(0, 1fr);
+      min-height: calc(100vh - 60px);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      padding: 18px;
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      overflow-y: auto;
+      max-height: calc(100vh - 60px);
+      position: sticky;
+      top: 60px;
+    }
+
+    .content {
+      display: grid;
+      align-content: start;
+      gap: 18px;
+      padding: 18px;
+      min-width: 0;
+    }
+
+    /* ── Panel ──────────────────────────────────────────────────── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(24, 33, 47, 0.06);
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .panel h2, .panel h3 { margin: 0; font-size: 1rem; letter-spacing: -0.01em; }
+
+    .panel-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ── Status ─────────────────────────────────────────────────── */
+    .status { min-height: 20px; color: var(--muted); font-size: 0.85rem; }
+    .status.error { color: var(--danger); font-weight: 700; }
+    .status.good  { color: var(--good);   font-weight: 700; }
+    .status.info  { color: var(--brand);  font-weight: 600; }
+
+    /* ── Chips & Badges ─────────────────────────────────────────── */
+    .id-chip {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      min-height: 26px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 0 8px;
+      background: var(--line-soft);
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 0.72rem;
+      overflow-wrap: anywhere;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: var(--brand-light);
+      color: var(--brand-strong);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .status-banner {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: var(--accent-light);
+      color: var(--warn);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .status-banner.done { background: var(--good-light); color: var(--good); }
+
+    .cluster-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 20px;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: var(--warn-light);
+      color: var(--warn);
+      font-size: 0.7rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .profanity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      min-height: 20px;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: var(--danger-light);
+      color: var(--danger);
+      font-size: 0.68rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .lang-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      min-height: 20px;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: #f0fdf4;
+      color: #15803d;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .urgency { color: var(--danger); font-weight: 900; font-size: 0.9rem; }
+
+    /* ── Tabs ───────────────────────────────────────────────────── */
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      border-bottom: 2px solid var(--line);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      border-radius: 6px 6px 0 0;
+      padding: 8px 12px;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.78rem;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      margin-bottom: -2px;
+      min-height: 38px;
+      white-space: nowrap;
+      transition: color 0.15s, background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: none;
+    }
+
+    .tab-btn:hover:not(.active) { color: var(--ink-soft); background: var(--line-soft); }
+
+    .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); background: none; box-shadow: none; }
+    .tab-btn[data-tab="urgent_infrastructure"].active { color: var(--triage-urgent); border-bottom-color: var(--triage-urgent); }
+    .tab-btn[data-tab="long_term_planning"].active    { color: var(--triage-long);   border-bottom-color: var(--triage-long); }
+    .tab-btn[data-tab="critical_emergency"].active    { color: var(--triage-emergency); border-bottom-color: var(--triage-emergency); }
+
+    .tab-count {
+      background: var(--line-soft);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 1px 6px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .tab-btn.active .tab-count { background: var(--brand-light); color: var(--brand); }
+    .tab-btn[data-tab="urgent_infrastructure"].active .tab-count { background: #fee2e2; color: var(--triage-urgent); }
+    .tab-btn[data-tab="long_term_planning"].active .tab-count    { background: #ede9fe; color: var(--triage-long); }
+
+    /* ── Priority List (Sidebar) ────────────────────────────────── */
+    .priority-list {
+      display: grid;
+      gap: 8px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .priority-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--page);
+      display: grid;
+      gap: 6px;
+      transition: box-shadow 0.15s;
+    }
+
+    .priority-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: var(--panel); }
+
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .meta { color: var(--muted); font-size: 0.83rem; }
+
+    /* ── Submission Cards ───────────────────────────────────────── */
+    .submission-list { display: grid; gap: 14px; }
+
+    .submission-item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--panel);
+      display: grid;
+      gap: 10px;
+      transition: box-shadow 0.15s;
+    }
+
+    .submission-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+    .submission-photo {
+      width: 100%;
+      max-height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      display: block;
+    }
+
+    .description-toggle {
+      background: none;
+      border: none;
+      border-radius: 4px;
+      padding: 2px 6px;
+      min-height: 0;
+      color: var(--brand);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+
+    .description-toggle:hover { background: var(--brand-light); }
+
+    .raw-description-block {
+      background: var(--page);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      font-style: italic;
+      display: none;
+    }
+
+    .raw-description-block.open { display: block; }
+
+    /* ── MP Update Form ─────────────────────────────────────────── */
+    .controls-form {
+      border-top: 1px solid var(--line);
+      padding-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.8fr) minmax(160px, 1.4fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    /* ── Stats Bar ──────────────────────────────────────────────── */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--admin-accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-divider { width: 1px; height: 28px; background: var(--line); }
+
+    /* ── Portal Return Link ────────────────────────────────── */
+    .topbar-return-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-height: 34px;
+      padding: 0 14px;
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .topbar-return-link:hover {
+      background: rgba(255, 255, 255, 0.18);
+      border-color: rgba(255, 255, 255, 0.65);
+      color: #fff;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .dashboard { grid-template-columns: minmax(260px, 300px) minmax(0, 1fr); }
+    }
+
+    @media (max-width: 840px) {
+      .dashboard { grid-template-columns: 1fr; }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        position: static;
+        max-height: none;
+        overflow-y: visible;
+      }
+      .priority-list { max-height: 280px; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar { padding: 0 14px; }
+      .sidebar, .content { padding: 14px; }
+      .controls-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-page">
+  <!-- ── Topbar ──────────────────────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">🏛️</div>
+      <div class="topbar-title">
+        <strong>MP Command Center</strong>
+        <span>Constituency Priorities &amp; Issue Management</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <a href="/" class="topbar-return-link">← Public Citizen Portal</a>
+      <span class="admin-badge" id="mp-session-badge" hidden>🔒 MP Access Active</span>
+      <button id="refresh" class="secondary" type="button" disabled>↻ Refresh</button>
+    </div>
+  </header>
+
+  <!-- ── Auth Screen ─────────────────────────────────────────────────────── -->
+  <div class="auth-wrapper" id="auth-panel">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <span class="auth-card-icon">🔐</span>
+        <h1>MP Access</h1>
+        <p>Enter your MP passkey to access the constituency command center.</p>
+      </div>
+      <form id="passkey-form" class="login-form">
+        <label>
+          MP Passkey
+          <input id="admin-passkey" name="admin_passkey" type="password"
+            autocomplete="current-password"
+            placeholder="Enter your secure access code">
+        </label>
+        <span id="login-status" class="status" style="text-align:center"></span>
+        <button type="submit" class="login-submit">Unlock Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Admin Dashboard ────────────────────────────────────────────────── -->
+  <div id="admin-dashboard" class="dashboard" hidden>
+
+    <!-- ─── SIDEBAR ─────────────────────────────────────────────────────── -->
+    <aside class="sidebar">
+
+      <!-- Stats summary -->
+      <section class="panel" id="stats-panel">
+        <h2>Overview</h2>
+        <div class="stats-bar" id="stats-bar">
+          <div class="stat-item">
+            <div>
+              <div class="stat-value" id="stat-total">—</div>
+              <div class="stat-label">Issues</div>
+            </div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div>
+              <div class="stat-value" id="stat-citizens">—</div>
+              <div class="stat-label">Citizens</div>
+            </div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div>
+              <div class="stat-value" id="stat-urgent">—</div>
+              <div class="stat-label">Urgent</div>
+            </div>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <div>
+              <div class="stat-value" id="stat-done">—</div>
+              <div class="stat-label">Resolved</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ranked Priorities with Triage Tabs -->
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Ranked Priorities</h2>
+        </div>
+        <div style="border-bottom: 2px solid var(--line);">
+          <div class="tab-bar" id="priority-tab-bar" role="tablist">
+            <button class="tab-btn" data-tab="critical_emergency" role="tab">
+              🆘 Emergencies <span class="tab-count" id="ptab-count-critical_emergency">0</span>
+            </button>
+            <button class="tab-btn active" data-tab="quick_fix" role="tab">
+              ⚡ Quick <span class="tab-count" id="ptab-count-quick_fix">0</span>
+            </button>
+            <button class="tab-btn" data-tab="urgent_infrastructure" role="tab">
+              🚨 Urgent <span class="tab-count" id="ptab-count-urgent_infrastructure">0</span>
+            </button>
+            <button class="tab-btn" data-tab="long_term_planning" role="tab">
+              📐 Long-Term <span class="tab-count" id="ptab-count-long_term_planning">0</span>
+            </button>
+          </div>
+        </div>
+        <div id="priority-list" class="priority-list" role="tabpanel"></div>
+      </section>
+
+    </aside>
+
+    <!-- ─── CONTENT ──────────────────────────────────────────────────────── -->
+    <section class="content">
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>All Submissions</h2>
+          <span id="dashboard-status" class="status"></span>
+        </div>
+
+        <!-- Triage tabs for submissions -->
+        <div style="border-bottom: 2px solid var(--line);">
+          <div class="tab-bar" id="submission-tab-bar" role="tablist">
+            <button class="tab-btn" data-tab="critical_emergency" role="tab">
+              🆘 Emergencies <span class="tab-count" id="stab-count-critical_emergency">0</span>
+            </button>
+            <button class="tab-btn active" data-tab="quick_fix" role="tab">
+              ⚡ Quick Fixes <span class="tab-count" id="stab-count-quick_fix">0</span>
+            </button>
+            <button class="tab-btn" data-tab="urgent_infrastructure" role="tab">
+              🚨 Urgent Infrastructure <span class="tab-count" id="stab-count-urgent_infrastructure">0</span>
+            </button>
+            <button class="tab-btn" data-tab="long_term_planning" role="tab">
+              📐 Long-Term Planning <span class="tab-count" id="stab-count-long_term_planning">0</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="submission-list" class="submission-list"></div>
+      </section>
+    </section>
+
+  </div><!-- /admin-dashboard -->
+</div><!-- /admin-page -->
+
+<script type="module">
+  const STATUSES = ["Noticed by Government", "Under Process", "Work Started", "Work Done"];
+
+  /* ── State ──────────────────────────────────────────────────────────────── */
+  const state = {
+    submissions: [],
+    prioritiesByTriage: { quick_fix: [], urgent_infrastructure: [], long_term_planning: [] },
+    activePriorityTab: "quick_fix",
+    activeSubmissionTab: "quick_fix",
+  };
+  let storedPasskey = "";
+
+  /* ── DOM Refs ───────────────────────────────────────────────────────────── */
+  const $ = (id) => document.getElementById(id);
+  const refreshButton     = $("refresh");
+  const authPanel         = $("auth-panel");
+  const adminDashboard    = $("admin-dashboard");
+  const passkeyForm       = $("passkey-form");
+  const adminPasskey      = $("admin-passkey");
+  const loginStatus       = $("login-status");
+  const mpSessionBadge    = $("mp-session-badge");
+  const priorityTabBar    = $("priority-tab-bar");
+  const priorityList      = $("priority-list");
+  const submissionTabBar  = $("submission-tab-bar");
+  const submissionList    = $("submission-list");
+  const dashboardStatus   = $("dashboard-status");
+  const statTotal         = $("stat-total");
+  const statCitizens      = $("stat-citizens");
+  const statUrgent        = $("stat-urgent");
+  const statDone          = $("stat-done");
+
+  /* ── Utilities ──────────────────────────────────────────────────────────── */
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function setStatus(node, message, tone = "") {
+    node.textContent = message;
+    node.className = `status ${tone}`.trim();
+  }
+
+  function statusClass(s) {
+    return s === "Work Done" ? "status-banner done" : "status-banner";
+  }
+
+  function urgencyOf(item) {
+    const score = Number(item.urgency_score ?? item.analysis?.urgency_score ?? 1) || 1;
+    return score.toFixed(1);
+  }
+
+  function triageLabel(t) {
+    return { critical_emergency: "🆘 EMERGENCY", quick_fix: "⚡ Quick Fix", urgent_infrastructure: "🚨 Urgent", long_term_planning: "📐 Long-Term" }[t] || t;
+  }
+
+  function triageColor(t) {
+    return { critical_emergency: "var(--triage-emergency)", quick_fix: "var(--triage-quick)", urgent_infrastructure: "var(--triage-urgent)", long_term_planning: "var(--triage-long)" }[t] || "var(--muted)";
+  }
+
+  /* ── Auth ───────────────────────────────────────────────────────────────── */
+  async function fetchJson(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(storedPasskey ? { "x-admin-key": storedPasskey } : {}),
+        ...(options.headers || {}),
+      },
+    });
+    if (!response.ok) throw new Error(await response.text());
+    return response.json();
+  }
+
+  // Validate passkey by hitting a real endpoint — 403 = wrong key, 404 = correct key
+  async function validatePasskeyServerSide(passkey) {
+    const response = await fetch("/api/submissions/__auth_check__/mp_update", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-key": passkey },
+      body: JSON.stringify({ status: "Noticed by Government" }),
+    });
+    if (response.status === 403) throw new Error("Invalid passkey. Access denied.");
+    // 404 or 200 = key accepted (submission not found = expected for __auth_check__)
+  }
+
+  /* ── Stats ──────────────────────────────────────────────────────────────── */
+  function updateStats(submissions) {
+    const total    = submissions.length;
+    const citizens = submissions.reduce((s, r) => s + (r.report_count || 1), 0);
+    const urgent   = submissions.filter((r) => r.triage_category === "urgent_infrastructure").length;
+    const done     = submissions.filter((r) => r.status === "Work Done").length;
+    statTotal.textContent   = total;
+    statCitizens.textContent = citizens;
+    statUrgent.textContent  = urgent;
+    statDone.textContent    = done;
+  }
+
+  /* ── Priority Tabs ──────────────────────────────────────────────────────── */
+  priorityTabBar.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab-btn[data-tab]");
+    if (!btn) return;
+    const tab = btn.dataset.tab;
+    state.activePriorityTab = tab;
+    priorityTabBar.querySelectorAll(".tab-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.tab === tab);
+    });
+    renderActivePriorityTab();
+  });
+
+  function renderActivePriorityTab() {
+    const items = state.prioritiesByTriage[state.activePriorityTab] || [];
+    if (!items.length) {
+      priorityList.innerHTML = `<div class="meta" style="padding:8px">No priorities in this category.</div>`;
+      return;
+    }
+    priorityList.innerHTML = items.slice(0, 20).map((item, index) => {
+      const titleText = item.formal_description || item.latest_summary || "";
+      const displayTitle = titleText
+        ? titleText.substring(0, 50) + (titleText.length > 50 ? "…" : "")
+        : item.category || "General Issue";
+      return `
+      <article class="priority-item${item.triage_category === 'critical_emergency' ? ' emergency-item' : ''}">
+        <div class="row">
+          <strong style="font-size:0.88rem">${index + 1}. ${escapeHtml(displayTitle)}</strong>
+          <span class="pill">${escapeHtml(item.category)}</span>
+        </div>
+        <div class="row meta">
+          <span>
+            ${escapeHtml(item.count)} issues
+            ${item.total_reports > item.count
+              ? ('<span class="cluster-badge">👥 ' + escapeHtml(item.total_reports) + '</span>')
+              : ""}
+          </span>
+          <span class="urgency">${Number(item.demand_score || 0).toFixed(1)}/10</span>
+        </div>
+        <div class="meta" style="line-clamp:2;-webkit-line-clamp:2;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical">
+          ${escapeHtml(item.latest_summary)}
+        </div>
+      </article>
+    `;
+    }).join("");
+  }
+
+  function renderPriorities(byTriage) {
+    state.prioritiesByTriage = {
+      critical_emergency:    byTriage.critical_emergency || [],
+      quick_fix:             byTriage.quick_fix || [],
+      urgent_infrastructure: byTriage.urgent_infrastructure || [],
+      long_term_planning:    byTriage.long_term_planning || [],
+    };
+    for (const key of ["critical_emergency", "quick_fix", "urgent_infrastructure", "long_term_planning"]) {
+      const el = $(`ptab-count-${key}`);
+      if (el) el.textContent = (state.prioritiesByTriage[key] || []).length;
+    }
+    renderActivePriorityTab();
+  }
+
+  /* ── Submission Triage Tabs ─────────────────────────────────────────────── */
+  submissionTabBar.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tab-btn[data-tab]");
+    if (!btn) return;
+    const tab = btn.dataset.tab;
+    state.activeSubmissionTab = tab;
+    submissionTabBar.querySelectorAll(".tab-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.tab === tab);
+    });
+    renderActiveSubmissionTab();
+  });
+
+  function renderActiveSubmissionTab() {
+    const filtered = state.submissions.filter(
+      (s) => (s.triage_category || "quick_fix") === state.activeSubmissionTab
+    );
+    renderSubmissions(filtered);
+  }
+
+  function updateSubmissionTabCounts(submissions) {
+    for (const key of ["critical_emergency", "quick_fix", "urgent_infrastructure", "long_term_planning"]) {
+      const count = submissions.filter((s) => (s.triage_category || "quick_fix") === key).length;
+      const el = $(`stab-count-${key}`);
+      if (el) el.textContent = count;
+    }
+  }
+
+  /* ── Status Options ─────────────────────────────────────────────────────── */
+  function statusOptions(selected) {
+    return STATUSES.map((s) =>
+      `<option value="${escapeHtml(s)}" ${s === selected ? "selected" : ""}>${escapeHtml(s)}</option>`
+    ).join("");
+  }
+
+  /* ── Render Submissions ─────────────────────────────────────────────────── */
+  function renderSubmissions(items) {
+    if (!items.length) {
+      submissionList.innerHTML = `<div class="meta" style="padding:8px">No submissions in this category.</div>`;
+      return;
+    }
+
+    submissionList.innerHTML = items.slice(0, 80).map((item) => {
+      const currentStatus = item.status || "Noticed by Government";
+      const explanation   = item.mp_explanation || "";
+      const triage        = item.triage_category || "quick_fix";
+      const isEmergency   = triage === "critical_emergency";
+      const summary       = item.formal_description || "Media submission";
+      const rawDescription = item.raw_description && item.raw_description !== summary
+        ? item.raw_description
+        : "";
+      const address       = item.address ? `<div class="meta">📍 ${escapeHtml(item.address)}</div>` : "";
+      const reportCount   = item.report_count || 1;
+
+      const clusterBadge  = reportCount > 1
+        ? `<span class="cluster-badge">👥 ${escapeHtml(reportCount)} citizens reported</span>`
+        : "";
+
+      const langBadge = item.detected_language && item.detected_language !== "en"
+        ? `<span class="lang-badge">🌐 ${escapeHtml(item.detected_language.toUpperCase())}</span>`
+        : "";
+
+      const profanityBadge = item.profanity_detected
+        ? `<span class="profanity-badge">⚠️ Profanity filtered</span>`
+        : "";
+
+      const photoThumb = item.photo_url
+        ? `<img class="submission-photo" src="${escapeHtml(item.photo_url)}" alt="Submitted photo for issue ${escapeHtml(item.id)}" loading="lazy">`
+        : "";
+
+      const rawDescBlock = rawDescription ? `
+        <details style="margin-top: 8px;">
+          <summary style="font-size:0.8rem; color:#777; cursor:pointer;">Show Original Citizen Input</summary>
+          <p style="font-style:italic; font-size:0.85rem; color:#555; background:#f9f9f9; padding:6px; border-radius:4px;">${escapeHtml(rawDescription)}</p>
+        </details>
+      ` : "";
+
+      // Linked citizens list (collapsed if many)
+      const linkedList = item.linked_reports && item.linked_reports.length > 0 ? `
+        <details style="font-size:0.8rem;color:var(--muted)">
+          <summary style="cursor:pointer;font-weight:700;color:var(--brand)">
+            ${item.linked_reports.length} linked citizen report${item.linked_reports.length !== 1 ? "s" : ""}
+          </summary>
+          <div style="display:grid;gap:4px;margin-top:6px;padding-left:12px">
+            ${item.linked_reports.map((lr) => `
+              <div>
+                <code style="font-size:0.7rem">${escapeHtml(lr.citizen_id)}</code>
+                ${lr.address ? ` — ${escapeHtml(lr.address)}` : ""}
+                ${lr.submitted_at ? `<span style="margin-left:6px;color:var(--muted)">${new Date(lr.submitted_at).toLocaleDateString()}</span>` : ""}
+              </div>
+            `).join("")}
+          </div>
+        </details>
+      ` : "";
+
+      return `
+        <article class="submission-item${isEmergency ? ' emergency-item' : ''}" id="item-${escapeHtml(item.id)}">
+          ${isEmergency ? `<div style="background:var(--triage-emergency);color:#fff;border-radius:6px;padding:6px 12px;font-size:0.78rem;font-weight:800;letter-spacing:0.04em;display:flex;align-items:center;gap:8px;">🆘 CRITICAL EMERGENCY — Escalate Immediately</div>` : ""}
+          ${photoThumb}
+
+          <div class="row" style="flex-wrap:wrap;gap:6px">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <span class="pill">${escapeHtml(item.category || item.analysis?.category || "other")}</span>
+              <span style="font-size:0.75rem;font-weight:700;color:${triageColor(triage)}">${triageLabel(triage)}</span>
+              ${clusterBadge}
+              ${langBadge}
+              ${profanityBadge}
+            </div>
+            <span class="urgency">${urgencyOf(item)}&nbsp;/&nbsp;10</span>
+          </div>
+
+          <div class="row">
+            <span class="id-chip" title="Master issue ID">${escapeHtml(item.id)}</span>
+            <span class="${statusClass(currentStatus)}">${escapeHtml(currentStatus)}</span>
+          </div>
+
+          <strong style="font-size:0.92rem;line-height:1.4">${escapeHtml(summary)}</strong>
+          ${rawDescBlock}
+          ${address}
+          <div class="meta">${escapeHtml(item.channel || "Date of Submission Form")} · ${new Date(item.created_at || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</div>
+
+          ${explanation ? `<div class="meta" style="border-left:3px solid var(--brand);padding-left:8px"><strong>MP Update:</strong> ${escapeHtml(explanation)}</div>` : ""}
+          ${linkedList}
+
+          ${item.citizen_review ? `
+            <div class="meta">
+              <strong>Citizen Rating:</strong> ${escapeHtml(item.citizen_review)}/5 ★
+            </div>
+          ` : ""}
+
+          <form class="controls-form" data-update-id="${escapeHtml(item.id)}">
+            <div class="controls-grid">
+              <label>
+                Status
+                <select name="status">${statusOptions(currentStatus)}</select>
+              </label>
+              <label>
+                MP Explanation / Update
+                <input name="mp_explanation" value="${escapeHtml(explanation)}"
+                  placeholder="Action taken, plan, next steps…">
+              </label>
+              <button type="submit">Update</button>
+            </div>
+          </form>
+        </article>
+      `;
+    }).join("");
+  }
+
+  /* ── Update Submission ──────────────────────────────────────────────────── */
+  async function updateSubmission(id, payload) {
+    return fetchJson(`/api/submissions/${encodeURIComponent(id)}/mp_update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-key": storedPasskey },
+      body: JSON.stringify(payload),
+    });
+  }
+
+  /* ── Dashboard Refresh ──────────────────────────────────────────────────── */
+  async function refreshDashboard() {
+    setStatus(dashboardStatus, "Loading…", "info");
+    const [submissionsPayload, prioritiesPayload] = await Promise.all([
+      fetchJson("/api/submissions?limit=500"),
+      fetchJson("/api/priorities?limit=500"),
+    ]);
+    state.submissions = submissionsPayload.items || [];
+    updateStats(state.submissions);
+    updateSubmissionTabCounts(state.submissions);
+    renderActiveSubmissionTab();
+    renderPriorities(prioritiesPayload.by_triage || {});
+    setStatus(dashboardStatus, `${state.submissions.length} active issues`, "good");
+  }
+
+  /* ── Event Listeners ────────────────────────────────────────────────────── */
+  refreshButton.addEventListener("click", async () => {
+    if (!storedPasskey) {
+      setStatus(loginStatus, "Enter the MP passkey first.", "error");
+      return;
+    }
+    try {
+      await refreshDashboard();
+    } catch (err) {
+      setStatus(dashboardStatus, err.message, "error");
+    }
+  });
+
+  passkeyForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const passkey = adminPasskey.value.trim();
+    if (!passkey) {
+      setStatus(loginStatus, "Please enter the MP passkey.", "error");
+      return;
+    }
+
+    const submitBtn = passkeyForm.querySelector("button[type=submit]");
+    submitBtn.disabled = true;
+    setStatus(loginStatus, "Verifying…", "info");
+
+    try {
+      await validatePasskeyServerSide(passkey);
+      // Passkey confirmed — reveal dashboard
+      storedPasskey = passkey;
+      authPanel.hidden = true;
+      adminDashboard.hidden = false;
+      refreshButton.disabled = false;
+      mpSessionBadge.hidden = false;
+      await refreshDashboard();
+    } catch (err) {
+      storedPasskey = "";
+      adminPasskey.value = "";
+      submitBtn.disabled = false;
+      setStatus(loginStatus, err.message, "error");
+    }
+  });
+
+  submissionList.addEventListener("submit", async (e) => {
+    const updateForm = e.target.closest("[data-update-id]");
+    if (!updateForm) return;
+    e.preventDefault();
+
+    if (!storedPasskey) {
+      setStatus(dashboardStatus, "Enter the MP passkey first.", "error");
+      return;
+    }
+
+    const submitBtn = updateForm.querySelector("button[type=submit]");
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Saving…";
+
+    try {
+      const fd = new FormData(updateForm);
+      await updateSubmission(updateForm.dataset.updateId, {
+        status: fd.get("status"),
+        mp_explanation: fd.get("mp_explanation"),
+      });
+      setStatus(dashboardStatus, "✓ Submission updated — broadcast to all linked citizens.", "good");
+      await refreshDashboard();
+    } catch (err) {
+      setStatus(dashboardStatus, err.message, "error");
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText;
+    }
+  });
+</script>
+</body>
+</html>

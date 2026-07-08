@@ -1,0 +1,9 @@
+ward_id,ward_name,lat,lng,population,school_age_children,nearest_school_km,school_enrollment_rate,health_center_distance_km,road_condition_index,has_piped_water,literacy_rate
+W1,Rampur North,22.7850,87.8800,8200,1450,3.2,0.68,5.1,0.42,0,0.61
+W2,Rampur South,22.7700,87.8650,6500,1100,1.1,0.89,2.0,0.71,1,0.74
+W3,Lakshmipur,22.8020,87.9050,9100,1700,4.5,0.55,7.8,0.31,0,0.52
+W4,Sundarpalli,22.7600,87.8400,5400,900,0.8,0.92,1.5,0.65,1,0.78
+W5,Char Bhabanipur,22.8150,87.9300,4100,780,6.0,0.41,9.2,0.22,0,0.45
+W6,Nabagram,22.7900,87.8950,7300,1250,2.4,0.74,3.6,0.58,1,0.69
+W7,Durgachak,22.7500,87.8550,11200,1980,1.8,0.81,2.8,0.69,1,0.71
+W8,Mahishadal Fringe,22.8300,87.9500,3900,690,5.5,0.49,8.4,0.28,0,0.49

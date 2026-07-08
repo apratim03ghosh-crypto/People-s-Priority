@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: peoples-priority-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: ENABLE_LOCAL_AI_FALLBACK
+        value: "true"
+      - key: REQUIRE_DASHBOARD_AUTH
+        value: "false"
+      - key: USE_BIGQUERY
+        value: "false"
+      - key: DEMOGRAPHICS_CSV_PATH
+        value: data/demographics_sample.csv
+      - key: DEFAULT_MAP_LAT
+        value: "28.6139"
+      - key: DEFAULT_MAP_LNG
+        value: "77.2090"
+      - key: HEATMAP_RADIUS
+        value: "38"
+      # ── Set this manually in the Render dashboard ─────────────────────
+      # - key: GEMINI_API_KEY
+      #   value: "your-AIza-key-here"
+      # - key: ALLOWED_ORIGINS
+      #   value: "https://your-netlify-app.netlify.app"
+      # ──────────────────────────────────────────────────────────────────
